@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="assets/favicon-be.png" />
+  <title>Be Management — Marketing Agency La Plata</title>
+  <meta name="description" content="Be Management es una agencia de marketing full-service en La Plata, Buenos Aires. Diseño, redes sociales, publicidad digital, IA generativa y desarrollo web." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080808;
+      --white: #ffffff;
+      --accent-start: #FF4500;
+      --accent-end:   #FF8C00;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--black);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Noise overlay ── */
+    #noise {
+      position: fixed; inset: 0; z-index: 9990;
+      pointer-events: none; opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+    }
+
+    /* ── Custom cursor ── */
+    #cursor-dot {
+      position: fixed; top: 0; left: 0; width: 8px; height: 8px;
+      background: #FF6A00; border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.3s;
+    }
+    #cursor-ring {
+      position: fixed; top: 0; left: 0; width: 32px; height: 32px;
+      border: 1.5px solid rgba(255,106,0,0.55);
+      border-radius: 50%; pointer-events: none; z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, border-color 0.3s;
+    }
+
+    /* ── Gradient text ── */
+    .grad-text {
+      background: linear-gradient(90deg, #FF4500, #FF8C00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Gradient button ── */
+    .btn-grad {
+      background: linear-gradient(90deg, #FF4500, #FF8C00);
+      color: #fff; font-weight: 700; letter-spacing: 0.08em;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-grad:hover { opacity: 0.88; transform: translateY(-2px); }
+
+    /* ── Navbar ── */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s;
+    }
+    #navbar.scrolled {
+      background: rgba(8,8,8,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      letter-spacing: 0.18em; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase;
+    }
+    .sec-black .section-label { color: rgba(255,255,255,0.35); }
+    .sec-white .section-label { color: rgba(0,0,0,0.35); }
+
+    /* ── Hero word reveal ── */
+    .word-wrap { display: inline-block; overflow: hidden; vertical-align: top; }
+    .word-wrap > span {
+      display: inline-block;
+      transform: translateY(105%);
+      animation: wordUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes wordUp {
+      to { transform: translateY(0); }
+    }
+    @keyframes heroLineIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* Tracking collapse: arranca con letras separadas y cierra al valor final */
+    @keyframes heroTitleIn {
+      from { opacity: 0; transform: translateY(32px); letter-spacing: 0.14em; }
+      to   { opacity: 1; transform: translateY(0);    letter-spacing: -0.01em; }
+    }
+
+    /* ── Hero logo drop ── */
+    #hero-logo-wrap {
+      position: absolute; right: 6%; top: 0; bottom: 0;
+      width: clamp(260px, 32vw, 440px);
+      display: flex; align-items: center;
+      pointer-events: none; z-index: 1;
+    }
+    #hero-float-logo {
+      width: 100%; opacity: 0; display: block;
+      animation: dropLogoDesktop 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+      filter: drop-shadow(0 24px 64px rgba(255, 106, 0, 0.18));
+    }
+    @keyframes dropLogoDesktop {
+      from { transform: translateY(-55vh); opacity: 0; }
+      80%  { opacity: 1; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 767px) {
+      #hero-logo-wrap { display: none; }
+      #hero { min-height: 72vh !important; }
+    }
+    @media (min-width: 768px) {
+      #hero { min-height: 100vh !important; }
+    }
+
+    /* ── Marquee ── */
+    .marquee-track {
+      display: flex;
+      animation: marquee 28s linear infinite;
+      white-space: nowrap;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .dot-sep {
+      display: inline-block; width: 5px; height: 5px;
+      background: #FF6A00; border-radius: 50;
+      margin: 0 18px; vertical-align: middle;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Dividers ── */
+    .divider-bw {
+      height: 32px; background: var(--white);
+      margin-top: -1px; position: relative; z-index: 2;
+    }
+    .divider-wb {
+      height: 32px; background: var(--black);
+      margin-top: -1px; position: relative; z-index: 2;
+    }
+    @media (min-width: 768px) {
+      .divider-bw, .divider-wb { height: 64px; }
+    }
+
+    /* ── BLACK sections ── */
+    .sec-black { background: var(--black); color: #fff; }
+
+    /* ── WHITE sections ── */
+    .sec-white { background: var(--white); color: var(--black); }
+    .sec-white h2, .sec-white h3, .sec-white h4 { color: #080808; }
+    .sec-white p  { color: rgba(0,0,0,0.55); }
+    .sec-white .ghost-link { color: rgba(0,0,0,0.55); }
+    .sec-white .ghost-link:hover { color: #FF6A00; }
+
+    /* ── Service cards (black) ── */
+    .service-card {
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .service-card:hover {
+      border-color: rgba(255,100,0,0.45);
+      box-shadow: 0 0 32px rgba(255,80,0,0.12);
+      transform: translateY(-4px);
+    }
+    .service-card .arrow-icon { transition: transform 0.3s ease; }
+    .service-card:hover .arrow-icon { transform: rotate(45deg); }
+
+    /* ── Service cards grid ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 1024px) {
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .services-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Stats band ── */
+    .stat-item-white {
+      border-right: 1px solid rgba(0,0,0,0.1);
+    }
+    .stat-item-white:last-child { border-right: none; }
+
+    /* ── Project cards ── */
+    .proj-card {
+      position: relative; overflow: hidden; border-radius: 4px;
+    }
+    .proj-card img {
+      transition: transform 0.55s ease;
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .proj-card:hover img { transform: scale(1.06); }
+    .proj-card .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, rgba(8,8,8,0.3) 60%, transparent 100%);
+      transition: background 0.4s ease;
+    }
+    .proj-card:hover .overlay {
+      background: linear-gradient(to top, rgba(8,8,8,0.97) 0%, rgba(8,8,8,0.55) 70%, rgba(8,8,8,0.1) 100%);
+    }
+    .proj-card .proj-cta {
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .proj-card:hover .proj-cta { opacity: 1; transform: translateY(0); }
+
+    /* ── Process rows (white) ── */
+    .process-row {
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      transition: padding-left 0.3s ease, background 0.3s ease, border-left 0.3s ease;
+      border-left: 3px solid transparent;
+    }
+    .process-row:hover {
+      padding-left: 2rem;
+      background: rgba(0,0,0,0.03);
+      border-left-color: #FF6A00;
+    }
+
+    /* ── Why us rotating ring ── */
+    .ring-spin { animation: spin 20s linear infinite; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ── Contact form (white) ── */
+    .form-field {
+      background: #f5f5f5;
+      border: 1px solid rgba(0,0,0,0.12);
+      color: #080808;
+      transition: border-color 0.25s;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .form-field::placeholder { color: rgba(0,0,0,0.3); font-family: 'Montserrat', sans-serif; }
+    .form-field:focus {
+      outline: none;
+      border-color: rgba(255,100,0,0.55);
+      background: #efefef;
+    }
+
+    /* ── IA neural net animation ── */
+    .neural-line {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: drawLine 2s ease forwards;
+    }
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+    .neural-node {
+      opacity: 0;
+      animation: fadeNode 0.4s ease forwards;
+    }
+
+    /* ── Ghost link ── */
+    .ghost-link {
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.06em; font-weight: 600; font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .ghost-link:hover { color: #FF7A00; }
+
+    /* ── Magnetic button ── */
+    .btn-magnetic { transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
+
+    /* ── Preloader ── */
+    #preloader {
+      position: fixed; inset: 0; z-index: 10000;
+      background: #080808;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+      transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    #preloader.hide { transform: translateY(-100%); pointer-events: none; }
+    #preloader-logo {
+      width: 80px; height: 80px; object-fit: contain;
+      opacity: 0; transform: scale(0.7);
+      animation: preloaderIn 0.6s ease-out 0.2s forwards;
+    }
+    @keyframes preloaderIn { to { opacity: 1; transform: scale(1); } }
+    #preloader-bar {
+      width: 160px; height: 2px;
+      background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+    }
+    #preloader-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #FF4500, #FF8C00);
+      border-radius: 2px; transition: width 0.05s linear;
+    }
+    #preloader-name {
+      display: flex; gap: 1px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+    #preloader-name span { display: inline-block; opacity: 0; animation: charIn 0.3s ease forwards; }
+
+    @keyframes charIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #FF4500, #FF8C00); border-radius: 2px; }
+
+    /* ── Hero grid overlay (Linear-style) ── */
+    #hero-grid {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+    /* ── GSAP scroll word splits ── */
+    .g-word-outer { display: inline-block; overflow: hidden; vertical-align: bottom; line-height: inherit; }
+    .g-word-inner { display: inline-block; }
+
+    footer a:hover { color: #FF7A00; }
+  </style>
+</head>
+<body>
+
+<!-- ── Noise ── -->
+<div id="noise"></div>
+
+<!-- ── Cursor ── -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- ══════════════════════ PRELOADER ══════════════════════ -->
+<div id="preloader">
+  <img id="preloader-logo" src="assets/Logo.png" alt="Be Management" />
+  <div id="preloader-bar"><div id="preloader-fill"></div></div>
+  <div id="preloader-name"></div>
+</div>
+
+<!-- ══════════════════════ NAVBAR ══════════════════════ -->
+<nav id="navbar" class="px-6 md:px-12 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <span class="font-bold text-base tracking-wide">Be Management</span>
+    </a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="index.html" class="text-sm font-semibold text-white/70 hover:text-white transition-colors">Inicio</a>
+      <a href="#servicios" class="text-sm font-semibold text-white/70 hover:text-white transition-colors">Servicios</a>
+      <a href="proyectos.html" class="text-sm font-semibold text-white/70 hover:text-white transition-colors">Proyectos</a>
+      <a href="#capacitaciones" class="text-sm font-semibold text-white/70 hover:text-white transition-colors">Capacitaciones</a>
+      <a href="#contacto" class="text-sm font-semibold text-white/70 hover:text-white transition-colors">Contacto</a>
+    </div>
+    <a href="#contacto" class="btn-grad btn-magnetic px-5 py-2.5 rounded-sm text-xs uppercase tracking-widest">Hablemos</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════ HERO (BLACK) ══════════════════════ -->
+<section class="sec-black relative flex items-center pt-20 overflow-hidden" id="hero" style="min-height: 72vh;">
+  <!-- Linear-style bg: subtle orange glow + grid -->
+  <div id="hero-bg-glow" class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 65% 55% at 68% 45%, rgba(255,106,0,0.08) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 20% 75%, rgba(255,60,0,0.04) 0%, transparent 60%); z-index:0;"></div>
+  <div id="hero-grid"></div>
+  <div id="hero-logo-wrap">
+    <img id="hero-float-logo" src="assets/Logo.png" alt="" />
+  </div>
+
+  <div id="hero-content" class="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
+    <p id="hero-label" class="section-label mb-6">La Plata, Buenos Aires, Argentina</p>
+    <h1 class="mb-8" style="font-family: 'Montserrat', sans-serif; line-height: 1.05;">
+  <span id="ht-line1" style="display:block; opacity:0; font-size: clamp(2.6rem, 7vw, 6rem); font-weight: 500; letter-spacing: 0.07em; color: #ffffff; text-transform: uppercase;">Marketing</span>
+  <span id="ht-line2" style="display:block; opacity:0; font-size: clamp(4.5rem, 13vw, 11rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; padding-bottom: 0.08em;" class="grad-text">Digital</span>
+</h1>
+    <p id="hero-sub-text" class="text-sm md:text-base font-semibold uppercase tracking-widest text-white/50 max-w-2xl mb-12 leading-loose">
+      Crecimiento Real, Impulsado por tu Marca.
+    </p>
+    <div id="hero-ctas" class="flex flex-wrap items-center gap-5">
+      <a href="#contacto" class="btn-grad btn-magnetic px-8 py-4 rounded-sm text-sm uppercase tracking-widest font-black">
+        Empecemos ahora
+      </a>
+      <a href="proyectos.html" class="ghost-link flex items-center gap-2">
+        Ver proyectos <span class="text-lg">→</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="hero-scroll-hint" class="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2" style="opacity:0;">
+    <span class="text-xs uppercase tracking-widest">Scroll</span>
+    <div class="w-px h-12" style="background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ MARQUEE (BLACK) ══════════════════════ -->
+<div class="sec-black py-5 overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);">
+  <div class="marquee-track">
+    <span class="flex items-center">
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Diseño &amp; Branding</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Marketing Digital</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Desarrollo Web</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Publicidad &amp; Ads</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Producciones Audiovisuales</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">IA Generativa</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Fotografía</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Diseño &amp; Branding</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Marketing Digital</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Desarrollo Web</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Publicidad &amp; Ads</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Producciones Audiovisuales</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">IA Generativa</span><span class="dot-sep"></span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/50 px-4">Fotografía</span><span class="dot-sep"></span>
+    </span>
+  </div>
+</div>
+
+<!-- divider BLACK → WHITE -->
+<div class="divider-bw"></div>
+
+<!-- ══════════════════════ STATS (WHITE) ══════════════════════ -->
+<section class="sec-white py-20 px-6 md:px-12" id="stats">
+  <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
+    <div class="stat-item-white text-center py-10 px-4 reveal">
+      <p class="text-5xl md:text-6xl font-black grad-text mb-2" data-counter="80" data-prefix="+">+80</p>
+      <p class="text-xs uppercase tracking-widest font-semibold" style="color:rgba(0,0,0,0.4);">Clientes</p>
+    </div>
+    <div class="stat-item-white text-center py-10 px-4 reveal" style="transition-delay:0.1s">
+      <p class="text-5xl md:text-6xl font-black grad-text mb-2" data-counter="5" data-suffix="+">5+</p>
+      <p class="text-xs uppercase tracking-widest font-semibold" style="color:rgba(0,0,0,0.4);">Años</p>
+    </div>
+    <div class="stat-item-white text-center py-10 px-4 reveal" style="transition-delay:0.2s">
+      <p class="text-5xl md:text-6xl font-black grad-text mb-2" data-counter="3" data-suffix="×">3×</p>
+      <p class="text-xs uppercase tracking-widest font-semibold" style="color:rgba(0,0,0,0.4);">ROI Promedio</p>
+    </div>
+    <div class="text-center py-10 px-4 reveal" style="transition-delay:0.3s">
+      <p class="text-5xl md:text-6xl font-black grad-text mb-2">360°</p>
+      <p class="text-xs uppercase tracking-widest font-semibold" style="color:rgba(0,0,0,0.4);">Gestión</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- LOGOS MARQUEE (BLACK) -->
+<div class="sec-black py-6 overflow-hidden" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+
+  <div class="overflow-hidden">
+    <span style="display:flex; gap:28px; align-items:center; animation: logoMarqueeHome 50s linear infinite; white-space:nowrap; width:max-content; will-change:transform;">
+      <img src="assets/clientes/logo-clientes/1.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/2.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/3.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/4.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/5.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/6.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/7.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/8.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/9.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/10.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/11.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/12.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/13.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/14.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/15.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/16.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/17.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/18.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/19.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/20.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/21.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/22.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/23.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/24.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/25.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/26.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/27.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/28.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/1.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/2.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/3.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/4.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/5.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/6.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/7.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/8.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/9.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/10.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/11.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/12.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/13.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/14.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/15.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/16.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/17.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/18.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/19.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/20.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/21.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/22.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/23.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/24.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/25.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/26.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/27.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+      <img src="assets/clientes/logo-clientes/28.png" alt="" style="height:44px;width:130px;object-fit:contain;filter:grayscale(100%) brightness(1.8);opacity:0.4;" />
+    </span>
+  </div>
+</div>
+<style>
+  @keyframes logoMarqueeHome {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+
+<!-- divider WHITE → BLACK -->
+<div class="divider-wb"></div>
+
+<!-- ══════════════════════ SERVICES (BLACK) ══════════════════════ -->
+<section class="sec-black py-16 md:py-28 px-6 md:px-12" id="servicios">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-12 reveal">
+      <p class="section-label mb-3">Servicios</p>
+      <h2 class="text-4xl md:text-6xl font-black uppercase leading-tight">
+        Lo que <span class="grad-text">HACEMOS</span>
+      </h2>
+    </div>
+    <div class="services-grid">
+      <!-- FEATURED 360 -->
+      <div class="service-card reveal p-8 md:p-10 rounded-sm flex flex-col md:flex-row md:items-center gap-8 col-span-1 md:col-span-2 lg:col-span-3 cursor-pointer"
+           style="background: linear-gradient(135deg, #FF4500, #FF8C00); border-color: transparent;"
+           onclick="window.location.href='proyectos.html?filter=marketing-360'">
+        <div class="flex-1">
+          <span class="text-xs font-black tracking-widest text-white/60 uppercase">Servicio Destacado</span>
+          <h3 class="text-4xl md:text-5xl font-black text-white mt-2 mb-3">360°</h3>
+          <p class="text-lg font-semibold text-white/90">Nos convertimos en socios de tu negocio</p>
+          <p class="text-sm text-white/70 mt-2 max-w-lg">Estrategia, diseño, contenido, publicidad y análisis. Todo integrado, todo alineado a tus resultados.</p>
+        </div>
+        <div class="flex items-center gap-6 flex-wrap">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="16" stroke="white" stroke-width="1.5" opacity="0.5"/><path d="M18 6 A12 12 0 0 1 30 18" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M22 13 L13 18 L18 28 L22 13Z" stroke="white" stroke-width="1.5" stroke-linejoin="round" opacity="0.8"/></svg>
+          <div class="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">Ver proyectos <span class="text-xl">→</span></div>
+        </div>
+      </div>
+      <!-- 01 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" onclick="window.location.href='proyectos.html?filter=redes'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">01</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="2" width="10" height="10" rx="1" stroke="#FF6A00" stroke-width="1.5"/>
+            <rect x="16" y="2" width="10" height="10" rx="1" stroke="#FF6A00" stroke-width="1.5" opacity="0.5"/>
+            <rect x="9" y="16" width="10" height="10" rx="1" stroke="#FF6A00" stroke-width="1.5" opacity="0.3"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Diseño &amp; Branding</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Identidades visuales que comunican, conectan y convierten. Logos, paletas, tipografías y sistemas completos.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 02 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" style="transition-delay:0.05s" onclick="window.location.href='proyectos.html?filter=redes'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">02</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M4 22 L8 14 L13 18 L18 8 L24 6" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="6" r="2.5" stroke="#FF6A00" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Marketing Digital</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Estrategias de contenido que posicionan tu marca y generan ventas reales. Community management, calendarios y análisis.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 03 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" style="transition-delay:0.1s" onclick="window.location.href='proyectos.html?filter=desarrollo-web'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">03</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="5" width="24" height="18" rx="2" stroke="#FF6A00" stroke-width="1.5"/>
+            <path d="M9 12 L6 15 L9 18" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+            <path d="M19 12 L22 15 L19 18" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+            <path d="M16 10 L12 20" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Desarrollo Web</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Sitios y e-commerce diseñados para convertir visitantes en clientes. Rápidos, accesibles y optimizados para SEO.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 04 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" style="transition-delay:0.15s" onclick="window.location.href='proyectos.html?filter=redes'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">04</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="11" stroke="#FF6A00" stroke-width="1.5"/>
+            <path d="M14 3 A11 11 0 0 1 25 14" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+            <path d="M18 10 L10 14 L14 22 L18 10Z" stroke="#FF6A00" stroke-width="1.5" stroke-linejoin="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Publicidad &amp; Ads</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Campañas en Meta, Google y TikTok que maximizan tu ROI. Segmentación precisa, creatividades y optimización continua.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 05 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" style="transition-delay:0.2s" onclick="window.location.href='proyectos.html?filter=audiovisual'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">05</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="7" width="18" height="14" rx="2" stroke="#FF6A00" stroke-width="1.5"/>
+            <path d="M20 11 L26 8 L26 20 L20 17" stroke="#FF6A00" stroke-width="1.5" stroke-linejoin="round" opacity="0.5"/>
+            <circle cx="11" cy="14" r="3" stroke="#FF6A00" stroke-width="1.5" opacity="0.3"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Producciones Audiovisuales</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Reels, spots, fotografía de producto y contenido para campañas. Todo en un equipo integrado con tu estrategia.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 06 -->
+      <div class="service-card reveal p-8 rounded-sm flex flex-col gap-6 cursor-pointer" style="transition-delay:0.25s" onclick="window.location.href='proyectos.html?filter=audiovisual'">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-black tracking-widest" style="color:rgba(255,100,0,0.35);">06</span>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M4 14 L10 8 L10 11 L18 11 L18 8 L24 14 L18 20 L18 17 L10 17 L10 20 Z" stroke="#FF6A00" stroke-width="1.5" stroke-linejoin="round" opacity="0.5"/>
+            <circle cx="14" cy="14" r="11" stroke="#FF6A00" stroke-width="1.5" opacity="0.3"/>
+            <path d="M11 10 L11 18 M14 9 L14 19 M17 10 L17 18" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-3">Edición de Video</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Post-producción profesional: corte, color, motion graphics y música. Contenido que retiene y convierte en cualquier plataforma.</p>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <svg class="arrow-icon w-5 h-5 text-white/30" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ PROJECTS (BLACK) ══════════════════════ -->
+<section class="sec-black py-16 md:py-28 px-6 md:px-12" id="proyectos-teaser" style="border-top: 1px solid rgba(255,255,255,0.06);">
+  <div class="max-w-7xl mx-auto">
+    <div class="reveal flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
+      <div>
+        <p class="section-label mb-3">Proyectos</p>
+        <h2 class="text-4xl md:text-6xl font-black uppercase leading-tight">
+          Nuestros <span class="grad-text">PROYECTOS</span>
+        </h2>
+      </div>
+      <a href="proyectos.html" class="ghost-link shrink-0 flex items-center gap-2">
+        Ver todos <span class="text-lg">→</span>
+      </a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <a href="proyectos/lo-de-jorge.html" class="proj-card reveal block h-80">
+        <img src="assets/clientes/cliente-ldj.png" alt="Lo de Jorge" />
+        <div class="overlay"></div>
+        <div class="absolute inset-0 p-6 flex flex-col justify-end">
+          <p class="text-xs uppercase tracking-widest font-semibold mb-2" style="color:rgba(255,150,0,0.85);">Redes · Audiovisual · Web</p>
+          <h3 class="text-xl font-black mb-1">Lo de Jorge</h3>
+          <p class="text-xs mb-3" style="color:rgba(255,255,255,0.5);">Parrilla Restó</p>
+          <div class="proj-cta">
+            <span class="text-xs font-bold uppercase tracking-widest grad-text">Ver proyecto →</span>
+          </div>
+        </div>
+      </a>
+      <a href="proyectos/antonino.html" class="proj-card reveal block h-80" style="transition-delay:0.1s">
+        <img src="assets/clientes/cliente-antonino.png" alt="Antonino" />
+        <div class="overlay"></div>
+        <div class="absolute inset-0 p-6 flex flex-col justify-end">
+          <p class="text-xs uppercase tracking-widest font-semibold mb-2" style="color:rgba(255,150,0,0.85);">Redes · Desarrollo Web</p>
+          <h3 class="text-xl font-black mb-1">Antonino</h3>
+          <p class="text-xs mb-3" style="color:rgba(255,255,255,0.5);">Almacén de Fiambres</p>
+          <div class="proj-cta">
+            <span class="text-xs font-bold uppercase tracking-widest grad-text">Ver proyecto →</span>
+          </div>
+        </div>
+      </a>
+      <a href="proyectos/maxipiso.html" class="proj-card reveal block h-80" style="transition-delay:0.2s">
+        <img src="assets/clientes/cliente-maxipiso.png" alt="MaxiPiso" />
+        <div class="overlay"></div>
+        <div class="absolute inset-0 p-6 flex flex-col justify-end">
+          <p class="text-xs uppercase tracking-widest font-semibold mb-2" style="color:rgba(255,150,0,0.85);">Marketing 360°</p>
+          <h3 class="text-xl font-black mb-1">MaxiPiso</h3>
+          <p class="text-xs mb-3" style="color:rgba(255,255,255,0.5);">Líder Mayorista</p>
+          <div class="proj-cta">
+            <span class="text-xs font-bold uppercase tracking-widest grad-text">Ver proyecto →</span>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="reveal mt-10 text-center">
+      <a href="proyectos.html" class="btn-grad btn-magnetic inline-block px-8 py-4 rounded-sm text-xs uppercase tracking-widest font-black">
+        Ver todos los proyectos →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- divider BLACK → WHITE -->
+<div class="divider-bw"></div>
+
+<!-- ══════════════════════ IA GENERATIVA (WHITE) ══════════════════════ -->
+<section class="sec-white py-16 md:py-28 px-6 md:px-12" id="ia-generativa">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+    <div class="reveal">
+      <span class="inline-block text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-6"
+            style="background: linear-gradient(90deg,#FF4500,#FF8C00); color:#fff; letter-spacing:0.2em;">NUEVO</span>
+      <p class="section-label mb-4">Inteligencia Artificial</p>
+      <h2 class="text-4xl md:text-6xl font-black uppercase leading-tight mb-6">
+        <span class="grad-text">IA Generativa</span><br />para tu marca
+      </h2>
+      <p class="text-sm leading-relaxed mb-8" style="color:rgba(0,0,0,0.55);">
+        Automatizamos la creación de contenido, personalizamos experiencias a escala y potenciamos cada área de tu estrategia digital con modelos de inteligencia artificial de última generación.
+      </p>
+      <a href="#contacto" class="btn-grad btn-magnetic inline-block px-8 py-4 rounded-sm text-sm uppercase tracking-widest font-black">
+        Hablemos →
+      </a>
+    </div>
+    <div class="reveal flex items-center justify-center">
+      <div style="border: 1.5px solid rgba(255,106,0,0.6); padding: 8px; width:100%;">
+        <video autoplay loop muted playsinline preload="auto"
+               class="w-full" style="max-height:420px; object-fit:cover; display:block;">
+          <source src="assets/ia-generativa.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ CAPACITACIONES (WHITE) ══════════════════════ -->
+<section class="sec-white py-16 md:py-28 px-6 md:px-12" id="capacitaciones" style="border-top: 1px solid rgba(0,0,0,0.06);">
+  <div class="max-w-7xl mx-auto">
+    <div class="reveal mb-16">
+      <p class="section-label mb-3">Formación</p>
+      <h2 class="text-4xl md:text-6xl font-black uppercase leading-tight" style="color:#080808;">
+        Nuestras <span class="grad-text">CAPACITACIONES</span>
+      </h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Card 1: Meta Ads -->
+      <div class="reveal flex flex-col gap-6 p-8 rounded-sm" style="border:1px solid rgba(0,0,0,0.08); background:#fff; transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;" onmouseover="this.style.borderColor='rgba(255,100,0,0.4)';this.style.boxShadow='0 0 32px rgba(255,80,0,0.08)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='rgba(0,0,0,0.08)';this.style.boxShadow='none';this.style.transform='translateY(0)'">
+        <div class="w-12 h-12 flex items-center justify-center rounded-sm" style="background:rgba(255,80,0,0.08);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#FF6A00" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="6" stroke="#FF6A00" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="2" fill="#FF6A00"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-black text-lg uppercase mb-3" style="color:#080808;">Capacitación Meta Ads</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(0,0,0,0.5);">Aprendé a crear, optimizar y escalar campañas publicitarias en Facebook e Instagram. Desde la configuración del Business Manager hasta estrategias avanzadas de segmentación y conversión.</p>
+        </div>
+        <a href="#contacto" class="mt-auto flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style="color:#FF6A00;">Consultar <span>→</span></a>
+      </div>
+
+      <!-- Card 2: Diseño en Redes -->
+      <div class="reveal flex flex-col gap-6 p-8 rounded-sm" style="border:1px solid rgba(0,0,0,0.08); background:#fff; transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s; transition-delay:0.08s" onmouseover="this.style.borderColor='rgba(255,100,0,0.4)';this.style.boxShadow='0 0 32px rgba(255,80,0,0.08)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='rgba(0,0,0,0.08)';this.style.boxShadow='none';this.style.transform='translateY(0)'">
+        <div class="w-12 h-12 flex items-center justify-center rounded-sm" style="background:rgba(255,80,0,0.08);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 19L5 12L8 5H16L19 12L12 19Z" stroke="#FF6A00" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="2" fill="#FF6A00"/>
+            <path d="M12 5V3M19 12H21M12 19V21M5 12H3" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-black text-lg uppercase mb-3" style="color:#080808;">Diseño en Redes Sociales</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(0,0,0,0.5);">Dominá las herramientas y principios de diseño para crear contenido visual que destaque. Composición, tipografía, paletas de color y flujos de trabajo profesionales para redes.</p>
+        </div>
+        <a href="#contacto" class="mt-auto flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style="color:#FF6A00;">Consultar <span>→</span></a>
+      </div>
+
+      <!-- Card 3: Asesoría Contenido -->
+      <div class="reveal flex flex-col gap-6 p-8 rounded-sm" style="border:1px solid rgba(0,0,0,0.08); background:#fff; transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s; transition-delay:0.16s" onmouseover="this.style.borderColor='rgba(255,100,0,0.4)';this.style.boxShadow='0 0 32px rgba(255,80,0,0.08)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='rgba(0,0,0,0.08)';this.style.boxShadow='none';this.style.transform='translateY(0)'">
+        <div class="w-12 h-12 flex items-center justify-center rounded-sm" style="background:rgba(255,80,0,0.08);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.686 2 6 4.686 6 8c0 2.188 1.11 4.11 2.8 5.25V15h6.4v-1.75C16.89 12.11 18 10.188 18 8c0-3.314-2.686-6-6-6Z" stroke="#FF6A00" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M9 15v1a3 3 0 0 0 6 0v-1" stroke="#FF6A00" stroke-width="1.5"/>
+            <path d="M10 9h4M12 7v4" stroke="#FF6A00" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-black text-lg uppercase mb-3" style="color:#080808;">Asesoría Creación de Contenido</h3>
+          <p class="text-sm leading-relaxed" style="color:rgba(0,0,0,0.5);">Desarrollá una estrategia de contenido coherente y efectiva para tu marca. Planificación editorial, ideas de formatos, copywriting y métricas para medir el impacto real.</p>
+        </div>
+        <a href="#contacto" class="mt-auto flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style="color:#FF6A00;">Consultar <span>→</span></a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- divider WHITE → BLACK -->
+<div class="divider-wb"></div>
+
+<!-- ══════════════════════ WHY US (BLACK) ══════════════════════ -->
+<section class="sec-black py-16 md:py-28 px-6 md:px-12" id="nosotros">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+    <div class="reveal flex flex-col items-center justify-center gap-8">
+      <div class="relative w-56 h-56 md:w-72 md:h-72 flex items-center justify-center">
+        <svg class="ring-spin absolute inset-0 w-full h-full" viewBox="0 0 288 288" fill="none">
+          <circle cx="144" cy="144" r="130" stroke="url(#ringGrad)" stroke-width="1" stroke-dasharray="8 6"/>
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="288" y2="288" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#FF4500"/>
+              <stop offset="100%" stop-color="#FF8C00" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="absolute inset-8 rounded-full" style="border: 1px solid rgba(255,255,255,0.05);"></div>
+        <img src="assets/Logo.png" alt="Be Management" class="w-28 h-28 object-contain relative z-10" />
+      </div>
+      <div class="text-center">
+        <p class="text-xs font-black uppercase tracking-widest grad-text">Be / Management</p>
+        <p class="text-xs mt-1" style="color:rgba(255,255,255,0.3);">La Plata, Buenos Aires</p>
+      </div>
+    </div>
+    <div class="reveal space-y-10">
+      <div>
+        <p class="section-label mb-4">Por qué elegirnos</p>
+        <h2 class="text-4xl md:text-5xl font-black uppercase leading-tight mb-8">
+          Somos tu<br /><span class="grad-text">equipo.</span>
+        </h2>
+      </div>
+      <div class="space-y-8">
+        <div class="flex gap-5 items-start">
+          <span class="text-2xl font-black grad-text shrink-0 w-8">01</span>
+          <div>
+            <h4 class="font-bold mb-1">Estrategia antes que ejecución</h4>
+            <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Antes de publicar cualquier pieza, entendemos tu mercado, tu competencia y tus objetivos. La estrategia es el cimiento de todo resultado.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 items-start">
+          <span class="text-2xl font-black grad-text shrink-0 w-8">02</span>
+          <div>
+            <h4 class="font-bold mb-1">Equipo multidisciplinario</h4>
+            <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">Diseñadores, redactores, community managers, desarrolladores y videomakers trabajando en conjunto para tu marca.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 items-start">
+          <span class="text-2xl font-black grad-text shrink-0 w-8">03</span>
+          <div>
+            <h4 class="font-bold mb-1">Métricas que importan</h4>
+            <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,0.45);">No medimos likes. Medimos alcance, conversiones, ventas y ROI. Reportes mensuales claros y accionables.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- divider BLACK → WHITE -->
+<div class="divider-bw"></div>
+
+<!-- ══════════════════════ CONTACT (WHITE) ══════════════════════ -->
+<section class="sec-white py-16 md:py-28 px-6 md:px-12" id="contacto">
+  <div class="max-w-6xl mx-auto">
+    <div class="reveal relative rounded-sm overflow-hidden p-10 md:p-16"
+         style="background:#f0f0f0; border:1px solid rgba(0,0,0,0.08);">
+      <div class="absolute inset-0 pointer-events-none"
+           style="background: radial-gradient(ellipse at 50% 0%, rgba(255,80,0,0.08) 0%, transparent 65%);"></div>
+      <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-14">
+        <div>
+          <p class="section-label mb-3">Contacto</p>
+          <h2 class="text-3xl md:text-4xl font-black uppercase leading-tight mb-8" style="color:#080808;">
+            ¿Listo para <span class="grad-text">crecer?</span>
+          </h2>
+          <form class="space-y-4" onsubmit="handleForm(event)">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input type="text" placeholder="Nombre" class="form-field w-full px-4 py-3 rounded-sm text-sm" required />
+              <input type="text" placeholder="Apellido" class="form-field w-full px-4 py-3 rounded-sm text-sm" required />
+            </div>
+            <input type="email" placeholder="Email" class="form-field w-full px-4 py-3 rounded-sm text-sm" required />
+            <input type="tel" placeholder="Teléfono" class="form-field w-full px-4 py-3 rounded-sm text-sm" />
+            <textarea placeholder="Contanos sobre tu proyecto..." rows="4"
+                      class="form-field w-full px-4 py-3 rounded-sm text-sm resize-none" required></textarea>
+            <button type="submit" class="btn-grad btn-magnetic w-full py-4 rounded-sm text-sm uppercase tracking-widest font-black">
+              Enviar mensaje
+            </button>
+          </form>
+        </div>
+        <div class="flex flex-col justify-between gap-10">
+          <div>
+            <h3 class="text-xl font-bold mb-4" style="color:#080808;">Consultoría Personalizada</h3>
+            <p class="text-sm leading-relaxed" style="color:rgba(0,0,0,0.5);">
+              Cada marca es única. Nos tomamos el tiempo para entender tus objetivos, tu mercado y tu audiencia antes de proponer una estrategia. La primera consulta es sin costo.
+            </p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 mb-8">
+            <a href="https://calendly.com/be-pro/30min" target="_blank" rel="noopener"
+               class="btn-grad btn-magnetic flex-1 flex items-center justify-center gap-2 px-5 py-4 rounded-sm text-sm uppercase tracking-wider font-black">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="18" rx="2" stroke="white" stroke-width="1.5"/><path d="M16 2v4M8 2v4M2 10h20" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Agendar llamada
+            </a>
+            <a href="https://api.whatsapp.com/send/?phone=5492216925774&text&type=phone_number&app_absent=0" target="_blank" rel="noopener"
+               class="flex-1 flex items-center justify-center gap-2 px-5 py-4 rounded-sm text-sm uppercase tracking-wider font-black border-2 transition-all hover:bg-black hover:text-white"
+               style="border-color:#FF6A00; color:#FF6A00; background:transparent;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20.52 3.48A11.93 11.93 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A12 12 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.21-3.48-8.52z" fill="currentColor" opacity="0.15"/><path d="M17.4 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.64.07a8.1 8.1 0 01-2.38-1.47 8.93 8.93 0 01-1.65-2.05c-.17-.3 0-.46.13-.6l.43-.5c.14-.17.18-.3.27-.49s.05-.37-.02-.52l-.93-2.25c-.25-.58-.5-.5-.67-.51H8c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.47 1.06 2.86 1.21 3.06 2.09 3.18 5.05 4.46c.71.3 1.26.48 1.69.62.71.23 1.36.19 1.87.12.57-.09 1.77-.73 2.02-1.43s.25-1.3.17-1.43c-.07-.13-.27-.2-.57-.35z" fill="currentColor"/></svg>
+              WhatsApp
+            </a>
+          </div>
+          <div class="space-y-5">
+            <a href="https://instagram.com/bemanagement.pro" target="_blank" rel="noopener"
+               class="flex items-center gap-4 group">
+              <div class="w-11 h-11 rounded-sm flex items-center justify-center shrink-0"
+                   style="background:#e8e8e8; border:1px solid rgba(0,0,0,0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="2" width="20" height="20" rx="5" stroke="#FF6A00" stroke-width="1.5"/>
+                  <circle cx="12" cy="12" r="4" stroke="#FF6A00" stroke-width="1.5"/>
+                  <circle cx="17.5" cy="6.5" r="1" fill="#FF6A00"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-widest font-semibold mb-0.5" style="color:rgba(0,0,0,0.35);">Instagram</p>
+                <p class="text-sm font-bold group-hover:text-orange-500 transition-colors" style="color:#080808;">@bemanagement.pro</p>
+              </div>
+            </a>
+            <a href="https://api.whatsapp.com/send/?phone=5492216925774&text&type=phone_number&app_absent=0" target="_blank" rel="noopener"
+               class="flex items-center gap-4 group">
+              <div class="w-11 h-11 rounded-sm flex items-center justify-center shrink-0"
+                   style="background:#e8e8e8; border:1px solid rgba(0,0,0,0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M20.52 3.48A11.93 11.93 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A12 12 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.21-3.48-8.52z" fill="#FF6A00" opacity="0.15"/>
+                  <path d="M17.4 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.64.07a8.1 8.1 0 01-2.38-1.47 8.93 8.93 0 01-1.65-2.05c-.17-.3 0-.46.13-.6l.43-.5c.14-.17.18-.3.27-.49s.05-.37-.02-.52l-.93-2.25c-.25-.58-.5-.5-.67-.51H8c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.47 1.06 2.86 1.21 3.06 2.09 3.18 5.05 4.46c.71.3 1.26.48 1.69.62.71.23 1.36.19 1.87.12.57-.09 1.77-.73 2.02-1.43s.25-1.3.17-1.43c-.07-.13-.27-.2-.57-.35z" fill="#FF6A00"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-widest font-semibold mb-0.5" style="color:rgba(0,0,0,0.35);">WhatsApp</p>
+                <p class="text-sm font-bold group-hover:text-orange-500 transition-colors" style="color:#080808;">Escribinos ahora</p>
+              </div>
+            </a>
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-sm flex items-center justify-center shrink-0"
+                   style="background:#e8e8e8; border:1px solid rgba(0,0,0,0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" fill="#FF6A00" opacity="0.7"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-widest font-semibold mb-0.5" style="color:rgba(0,0,0,0.35);">Ubicación</p>
+                <p class="text-sm font-bold" style="color:#080808;">La Plata, Buenos Aires</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- divider WHITE → BLACK -->
+<div class="divider-wb"></div>
+
+<!-- ══════════════════════ FOOTER (BLACK) ══════════════════════ -->
+<footer class="sec-black px-6 md:px-12 py-12" style="border-top: 1px solid rgba(255,255,255,0.06);">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10">
+      <div class="flex flex-col gap-3">
+        <a href="index.html" class="flex items-center gap-3">
+          <img src="assets/Logo.png" alt="Be Management" class="h-9 w-auto" />
+          <span class="font-bold tracking-wide">Be Management</span>
+        </a>
+        <p class="text-sm font-semibold" style="color:rgba(255,255,255,0.35);">Hacemos que tu marca venda.</p>
+      </div>
+      <nav class="flex flex-wrap gap-6">
+        <a href="index.html" class="text-sm transition-colors" style="color:rgba(255,255,255,0.45);">Inicio</a>
+        <a href="ia-generativa.html" class="text-sm transition-colors" style="color:rgba(255,255,255,0.45);">IA Generativa</a>
+        <a href="#servicios" class="text-sm transition-colors" style="color:rgba(255,255,255,0.45);">Servicios</a>
+        <a href="proyectos.html" class="text-sm transition-colors" style="color:rgba(255,255,255,0.45);">Proyectos</a>
+        <a href="#contacto" class="text-sm transition-colors" style="color:rgba(255,255,255,0.45);">Contacto</a>
+      </nav>
+      <a href="https://instagram.com/bemanagement.pro" target="_blank" rel="noopener"
+         class="flex items-center gap-2 text-sm font-semibold transition-colors" style="color:rgba(255,255,255,0.45);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+        </svg>
+        @bemanagement.pro
+      </a>
+    </div>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-6"
+         style="border-top: 1px solid rgba(255,255,255,0.05);">
+      <p class="text-xs" style="color:rgba(255,255,255,0.2);">© 2025 Be Management. Todos los derechos reservados.</p>
+      <p class="text-xs" style="color:rgba(255,255,255,0.2);">bemanagement.pro</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══ PRELOADER ══ */
+function startHeroTitleAnim() {
+  const ease = 'cubic-bezier(0.16,1,0.3,1)';
+  const l1 = document.getElementById('ht-line1');
+  const l2 = document.getElementById('ht-line2');
+  if (l1) l1.style.animation = 'heroTitleIn 0.85s ' + ease + ' 0.1s forwards';
+  if (l2) l2.style.animation = 'heroTitleIn 0.85s ' + ease + ' 0.35s forwards';
+}
+
+(function() {
+  if (sessionStorage.getItem('be_loaded')) {
+    document.getElementById('preloader').style.display = 'none';
+    startHeroTitleAnim();
+    return;
+  }
+  const name = 'Be Management';
+  const nameEl = document.getElementById('preloader-name');
+  name.split('').forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.textContent = ch === ' ' ? '\u00A0' : ch;
+    s.style.animationDelay = (0.5 + i * 0.04) + 's';
+    nameEl.appendChild(s);
+  });
+  const fill = document.getElementById('preloader-fill');
+  let w = 0;
+  const iv = setInterval(() => {
+    w = Math.min(w + 2, 100);
+    fill.style.width = w + '%';
+    if (w >= 100) { clearInterval(iv); }
+  }, 20);
+  setTimeout(() => {
+    const pre = document.getElementById('preloader');
+    pre.classList.add('hide');
+    sessionStorage.setItem('be_loaded', '1');
+    // Disparar animaciones del título cuando termina la transición del preloader
+    pre.addEventListener('transitionend', startHeroTitleAnim, { once: true });
+  }, 2200);
+})();
+
+/* ══ CURSOR ══ */
+const dot  = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let ringX = 0, ringY = 0, mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  dot.style.left = mouseX + 'px'; dot.style.top = mouseY + 'px';
+});
+(function lerp() {
+  ringX += (mouseX - ringX) * 0.12;
+  ringY += (mouseY - ringY) * 0.12;
+  ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px';
+  requestAnimationFrame(lerp);
+})();
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => { dot.style.width='12px'; dot.style.height='12px'; ring.style.width='44px'; ring.style.height='44px'; });
+  el.addEventListener('mouseleave', () => { dot.style.width='8px';  dot.style.height='8px';  ring.style.width='32px'; ring.style.height='32px'; });
+});
+
+/* cursor color by section */
+const whiteSections = document.querySelectorAll('.sec-white');
+const cursorObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (false && e.isIntersecting) {
+      dot.classList.add('on-white');
+      ring.classList.add('on-white');
+    } else {
+      // only remove if not intersecting any white section
+      let anyWhite = false;
+      whiteSections.forEach(s => {
+        const r = s.getBoundingClientRect();
+        if (r.top < window.innerHeight / 2 && r.bottom > window.innerHeight / 2) anyWhite = true;
+      });
+      if (!anyWhite) { dot.classList.remove('on-white'); ring.classList.remove('on-white'); }
+    }
+  });
+}, { threshold: 0.5 });
+whiteSections.forEach(s => cursorObs.observe(s));
+
+/* ══ NAVBAR ══ */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+/* ══ SCROLL REVEAL ══ */
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  if (!el.style.transitionDelay) el.style.transitionDelay = (i % 5) * 0.07 + 's';
+  revealObs.observe(el);
+});
+
+/* ══ LOGO SCROLL OUT ══ */
+
+
+/* ══ COUNTER ANIMATION ══ */
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = parseInt(el.dataset.counter, 10);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    let current = 0;
+    const step = Math.ceil(target / 40);
+    const iv = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = prefix + current + suffix;
+      if (current >= target) clearInterval(iv);
+    }, 30);
+    counterObs.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-counter]').forEach(el => counterObs.observe(el));
+
+/* ══ MAGNETIC BUTTONS ══ */
+document.querySelectorAll('.btn-magnetic').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width  / 2;
+    const y = e.clientY - r.top  - r.height / 2;
+    btn.style.transform = `translate(${x * 0.25}px, ${y * 0.35}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+});
+
+/* ══ FORM ══ */
+function handleForm(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const orig = btn.textContent;
+  btn.textContent = '¡Mensaje enviado!';
+  btn.style.background = 'rgba(0,0,0,0.15)';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; e.target.reset(); }, 3000);
+}
+
+/* ══ NEURAL NET TRIGGER ON SCROLL ══ */
+const neuralObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.neural-line, .neural-node').forEach(el => {
+        el.style.animationPlayState = 'running';
+      });
+      neuralObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+const neuralSvg = document.getElementById('neural-svg');
+if (neuralSvg) {
+  neuralSvg.querySelectorAll('.neural-line, .neural-node').forEach(el => {
+    el.style.animationPlayState = 'paused';
+  });
+  neuralObs.observe(neuralSvg);
+}
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   GSAP — Full Page Animations  |  Linear-inspired
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  if (!window.gsap) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    ['#hero-label','#hero-sub-text','#hero-ctas','#hero-scroll-hint'].forEach(s => {
+      const el = document.querySelector(s);
+      if (el) { el.style.opacity = '1'; el.style.transform = 'none'; }
+    });
+    return;
+  }
+
+  // ── 1. Override CSS .reveal so GSAP controls all scroll reveals ──
+  document.querySelectorAll('.reveal').forEach(el => {
+    el.style.transition = 'none';
+    el.style.opacity    = '1';
+    el.style.transform  = 'none';
+  });
+
+  // ── 2. Hero entrance: función reutilizable ───────────────────────
+  function fireHeroGsapEntrance() {
+    gsap.set('#hero-label',       { opacity: 0, y: 14 });
+    gsap.set('#hero-sub-text',    { opacity: 0, y: 22 });
+    gsap.set('#hero-ctas',        { opacity: 0, y: 18 });
+    gsap.set('#hero-scroll-hint', { opacity: 0 });
+    gsap.timeline({ delay: 0.1 })
+      .to('#hero-label',       { opacity: 1, y: 0, duration: 0.5,  ease: 'power3.out' })
+      .to('#hero-sub-text',    { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' }, '-=0.15')
+      .to('#hero-ctas',        { opacity: 1, y: 0, duration: 0.6,  ease: 'power3.out' }, '-=0.2')
+      .to('#hero-scroll-hint', { opacity: 0.3, duration: 0.8, ease: 'power1.out' }, '-=0.25');
+  }
+
+  // ── 3. Word-split utility ─────────────────────────────────────────
+  function splitHeading(el) {
+    const units = [];
+    const nodes = Array.from(el.childNodes);
+    el.innerHTML = '';
+    nodes.forEach(node => {
+      if (node.nodeType === 3) {
+        node.textContent.split(/(\s+)/).forEach(w => {
+          if (!w.trim()) { el.appendChild(document.createTextNode(' ')); return; }
+          const out = document.createElement('span');
+          out.className = 'g-word-outer';
+          const inn = document.createElement('span');
+          inn.className = 'g-word-inner';
+          inn.textContent = w;
+          out.appendChild(inn);
+          el.appendChild(out);
+          units.push(inn);
+        });
+      } else if (node.nodeType === 1) {
+        if (node.tagName === 'BR') { el.appendChild(node.cloneNode()); return; }
+        const out = document.createElement('span');
+        out.className = 'g-word-outer';
+        const inn = document.createElement('span');
+        inn.className = 'g-word-inner';
+        inn.appendChild(node.cloneNode(true));
+        out.appendChild(inn);
+        el.appendChild(out);
+        units.push(inn);
+      }
+    });
+    return units;
+  }
+
+  // ── 4. Hook preloader callback + manejo de visita de retorno ────
+  const _orig = window.startHeroTitleAnim;
+  window.startHeroTitleAnim = function () {
+    _orig && _orig(); // CSS heroTitleIn en ht-line1/ht-line2
+    fireHeroGsapEntrance();
+  };
+  // Si el preloader ya se saltó (sessionStorage), disparar de inmediato
+  // porque startHeroTitleAnim ya se ejecutó antes de este script
+  if (sessionStorage.getItem('be_loaded')) {
+    fireHeroGsapEntrance();
+  }
+
+  // ── 5. 3D logo tilt + hero parallax (desktop only) ───────────────
+  const mm = gsap.matchMedia();
+
+  mm.add('(min-width: 768px)', () => {
+    const logoWrap = document.getElementById('hero-logo-wrap');
+    let tx = 0, ty = 0, cx = 0, cy = 0, rafId;
+
+    function onMove(e) {
+      tx = ((e.clientX / window.innerWidth)  - 0.5) * 26;
+      ty = -((e.clientY / window.innerHeight) - 0.5) * 20;
+    }
+    window.addEventListener('mousemove', onMove);
+
+    (function tick() {
+      cx += (tx - cx) * 0.05;
+      cy += (ty - cy) * 0.05;
+      if (logoWrap) {
+        gsap.set(logoWrap, {
+          rotateY: cx, rotateX: cy,
+          transformPerspective: 1000,
+          transformOrigin: 'center center',
+        });
+      }
+      rafId = requestAnimationFrame(tick);
+    })();
+
+    // Hero parallax on scroll — minimal, Linear-style
+    ScrollTrigger.create({
+      trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1.2,
+      onUpdate: self => {
+        const p = self.progress;
+        gsap.set('#hero-content', { y: p * -50, opacity: 1 - p * 0.8 });
+        if (logoWrap) gsap.set(logoWrap, { y: p * -80 });
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', onMove);
+    };
+  });
+
+  // ── 6. Section labels ─────────────────────────────────────────────
+  gsap.utils.toArray('.section-label').forEach(el => {
+    if (el.closest('#hero')) return;
+    gsap.from(el, {
+      scrollTrigger: { trigger: el, start: 'top 90%' },
+      opacity: 0, x: -18, duration: 0.5, ease: 'power2.out'
+    });
+  });
+
+  // ── 7. Section headings — word by word ───────────────────────────
+  ['#servicios h2', '#proyectos-teaser h2', '#ia-generativa h2',
+   '#capacitaciones h2', '#nosotros h2', '#contacto h2'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    const words = splitHeading(el);
+    gsap.from(words, {
+      scrollTrigger: { trigger: el, start: 'top 88%' },
+      y: '110%', duration: 0.65, stagger: 0.055, ease: 'power3.out'
+    });
+  });
+
+  // ── 8. Stats ─────────────────────────────────────────────────────
+  gsap.from('#stats .text-center', {
+    scrollTrigger: { trigger: '#stats', start: 'top 82%' },
+    y: 40, opacity: 0, duration: 0.65, stagger: 0.12, ease: 'power3.out'
+  });
+
+  // ── 9. Service cards cascade ──────────────────────────────────────
+  gsap.from('.service-card', {
+    scrollTrigger: { trigger: '#servicios .services-grid', start: 'top 80%' },
+    y: 52, opacity: 0, duration: 0.65, stagger: 0.08, ease: 'power3.out', clearProps: 'all'
+  });
+
+  // ── 10. Project cards cascade ─────────────────────────────────────
+  gsap.from('#proyectos-teaser .proj-card', {
+    scrollTrigger: { trigger: '#proyectos-teaser .grid', start: 'top 80%' },
+    y: 58, scale: 0.97, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out', clearProps: 'all'
+  });
+  gsap.from('#proyectos-teaser .reveal.mt-10', {
+    scrollTrigger: { trigger: '#proyectos-teaser .reveal.mt-10', start: 'top 88%' },
+    opacity: 0, y: 20, duration: 0.6, ease: 'power3.out'
+  });
+
+  // ── 11. IA Generativa section ─────────────────────────────────────
+  gsap.from('#ia-generativa .reveal', {
+    scrollTrigger: { trigger: '#ia-generativa', start: 'top 78%' },
+    y: 38, opacity: 0, duration: 0.7, stagger: 0.14, ease: 'power3.out'
+  });
+
+  // ── 12. Capacitaciones cards ──────────────────────────────────────
+  gsap.from('#capacitaciones .grid > div', {
+    scrollTrigger: { trigger: '#capacitaciones .grid', start: 'top 80%' },
+    y: 45, opacity: 0, duration: 0.65, stagger: 0.12, ease: 'power3.out', clearProps: 'all'
+  });
+
+  // ── 13. Why us visual + items ─────────────────────────────────────
+  gsap.from('#nosotros .relative.w-56, #nosotros .relative.w-72', {
+    scrollTrigger: { trigger: '#nosotros', start: 'top 82%' },
+    scale: 0.86, opacity: 0, duration: 0.9, ease: 'power3.out'
+  });
+  gsap.from('#nosotros .space-y-8 .flex', {
+    scrollTrigger: { trigger: '#nosotros .space-y-8', start: 'top 82%' },
+    x: -32, opacity: 0, duration: 0.6, stagger: 0.14, ease: 'power3.out'
+  });
+
+  // ── 14. Contact ───────────────────────────────────────────────────
+  gsap.from('#contacto .reveal', {
+    scrollTrigger: { trigger: '#contacto', start: 'top 82%' },
+    y: 35, opacity: 0, duration: 0.8, ease: 'power3.out'
+  });
+
+  // ── 15. Footer ────────────────────────────────────────────────────
+  gsap.from('footer .max-w-7xl > div', {
+    scrollTrigger: { trigger: 'footer', start: 'top 92%' },
+    y: 22, opacity: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out'
+  });
+
+  // ── 16. Líneas que se dibujan bajo headings ───────────────────────
+  ['#servicios h2', '#proyectos-teaser h2', '#nosotros h2', '#capacitaciones h2'].forEach(sel => {
+    const h2 = document.querySelector(sel);
+    if (!h2) return;
+    const line = document.createElement('div');
+    line.style.cssText = 'width:56px;height:2px;background:linear-gradient(90deg,#FF4500,#FF8C00);margin-top:18px;transform-origin:left center;';
+    h2.after(line);
+    gsap.from(line, {
+      scaleX: 0,
+      scrollTrigger: { trigger: h2, start: 'top 86%' },
+      duration: 0.75, delay: 0.4, ease: 'power3.out'
+    });
+  });
+
+  // ── 17. Texto que se ilumina al scrollear ─────────────────────────
+  function wordIlluminate(el, fromColor, toColor) {
+    if (!el) return;
+    const words = el.textContent.trim().split(/\s+/);
+    el.innerHTML = words.map(w =>
+      `<span style="color:${fromColor};display:inline;">${w}</span>`
+    ).join(' ');
+    gsap.to(el.querySelectorAll('span'), {
+      color: toColor,
+      stagger: { each: 0.25 },
+      scrollTrigger: {
+        trigger: el, start: 'top 80%', end: 'bottom 45%', scrub: 1.2
+      }
+    });
+  }
+  // Descripciones "Por qué elegirnos" (sección negra)
+  document.querySelectorAll('#nosotros .space-y-8 p').forEach(p => {
+    wordIlluminate(p, 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.5)');
+  });
+  // Párrafo IA Generativa (sección blanca)
+  wordIlluminate(
+    document.querySelector('#ia-generativa p.text-sm.leading-relaxed'),
+    'rgba(0,0,0,0.12)', 'rgba(0,0,0,0.6)'
+  );
+
+  // ── 18. 3D tilt en service cards ──────────────────────────────────
+  if (!window.matchMedia('(hover: none)').matches) {
+    document.querySelectorAll('.service-card').forEach(card => {
+      card.style.transformStyle = 'preserve-3d';
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x =  ((e.clientX - r.left) / r.width  - 0.5) * 14;
+        const y = -((e.clientY - r.top)  / r.height - 0.5) * 10;
+        gsap.to(card, { rotateY: x, rotateX: y, transformPerspective: 700, duration: 0.35, ease: 'power2.out' });
+      });
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.6, ease: 'power3.out' });
+      });
+    });
+  }
+
+  // ── 19. Números gigantes de fondo ─────────────────────────────────
+  function addBgNumber(sectionSel, text, css, parallaxY) {
+    const sec = document.querySelector(sectionSel);
+    if (!sec) return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    sec.style.overflow = 'hidden';
+    const el = document.createElement('div');
+    el.setAttribute('aria-hidden', 'true');
+    el.textContent = text;
+    el.style.cssText = `position:absolute;pointer-events:none;user-select:none;z-index:0;
+      font-family:'Montserrat',sans-serif;font-weight:900;line-height:1;letter-spacing:-0.05em;
+      ${css}`;
+    sec.appendChild(el);
+    gsap.to(el, {
+      y: parallaxY,
+      scrollTrigger: { trigger: sec, start: 'top bottom', end: 'bottom top', scrub: 1.8 }
+    });
+  }
+
+  addBgNumber(
+    '#servicios',
+    '360°',
+    'font-size:clamp(140px,24vw,280px);color:rgba(255,255,255,0.024);right:-1%;bottom:5%;',
+    -60
+  );
+  addBgNumber(
+    '#nosotros',
+    'Be',
+    'font-size:clamp(180px,30vw,360px);color:rgba(255,255,255,0.022);font-style:italic;left:-2%;top:50%;transform:translateY(-50%);',
+    -50
+  );
+  addBgNumber(
+    '#proyectos-teaser',
+    '08',
+    'font-size:clamp(140px,22vw,260px);color:rgba(255,255,255,0.022);right:0%;top:10%;',
+    -45
+  );
+
+})();
+</script>
+</body>
+</html>

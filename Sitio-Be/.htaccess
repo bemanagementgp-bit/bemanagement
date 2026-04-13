@@ -1,0 +1,12 @@
+Options -Indexes
+RewriteEngine On
+
+# Si el archivo existe tal cual (imagen, mp4, css, js), servirlo directo
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Si existe el archivo .html correspondiente, servirlo
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+AddType video/mp4 .mp4
